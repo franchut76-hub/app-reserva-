@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 
 export async function getServicesAdmin() {
@@ -25,10 +26,16 @@ export async function upsertService(data: { id?: string, name: string, descripti
   }
 
   let error;
+  
+  const supabaseAdmin = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
   if (data.id) {
-    ({ error } = await supabase.from('services').update(payload).eq('id', data.id))
+    ({ error } = await supabaseAdmin.from('services').update(payload).eq('id', data.id))
   } else {
-    ({ error } = await supabase.from('services').insert(payload))
+    ({ error } = await supabaseAdmin.from('services').insert(payload))
   }
 
   if (error) return { success: false, error: error.message }
@@ -44,7 +51,12 @@ export async function deleteService(id: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Unauthorized' }
 
-  const { error } = await supabase.from('services').delete().eq('id', id)
+  const supabaseAdmin = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  const { error } = await supabaseAdmin.from('services').delete().eq('id', id)
   if (error) return { success: false, error: error.message }
   
   revalidatePath('/')

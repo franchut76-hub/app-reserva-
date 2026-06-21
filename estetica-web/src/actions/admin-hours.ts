@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 
 export async function getBusinessHoursAdmin() {
@@ -17,10 +18,15 @@ export async function upsertBusinessHours(hours: any[]) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Unauthorized' }
 
+  const supabaseAdmin = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
   // Clear existing and insert new
-  await supabase.from('business_hours').delete().neq('id', '00000000-0000-0000-0000-000000000000') // delete all hack
+  await supabaseAdmin.from('business_hours').delete().neq('id', '00000000-0000-0000-0000-000000000000') // delete all hack
   
-  const { error } = await supabase.from('business_hours').insert(
+  const { error } = await supabaseAdmin.from('business_hours').insert(
     hours.map(h => ({
       day_of_week: h.day_of_week,
       open_time: h.open_time,
