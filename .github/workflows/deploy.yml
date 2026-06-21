@@ -1,0 +1,51 @@
+name: Deploy to Hostinger
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Setup PNPM
+      uses: pnpm/action-setup@v3
+      with:
+        version: 9
+
+    - name: Install Dependencies
+      working-directory: ./estetica-web
+      run: pnpm install
+
+    - name: Build Next.js
+      working-directory: ./estetica-web
+      run: pnpm build
+      # Las variables de entorno de frontend se necesitan durante la compilación
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+    - name: Prepare Standalone for Deployment
+      working-directory: ./estetica-web
+      run: |
+        cp -r public .next/standalone/public
+        cp -r .next/static .next/standalone/.next/static
+
+    - name: Upload via FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./estetica-web/.next/standalone/
+        server-dir: ./public_html/

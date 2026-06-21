@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Setup PNPM
+      uses: pnpm/action-setup@v3
+      with:
+        version: 9
+
+    - name: Install Dependencies
+      working-directory: ./estetica-web
+      run: pnpm install
+
+    - name: Run Linter
+      working-directory: ./estetica-web
+      run: pnpm lint
+
+    - name: Type Check
+      working-directory: ./estetica-web
+      run: pnpm tsc --noEmit
+
+    - name: Build Next.js
+      working-directory: ./estetica-web
+      run: pnpm build
+      env:
+        # Define mock environment variables for build
+        NEXT_PUBLIC_SUPABASE_URL: "https://mock.supabase.co"
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: "mock_anon_key"

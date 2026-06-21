@@ -13,7 +13,10 @@ export default function LoginPage() {
           <p className="text-stone-500 text-sm tracking-wide">ÁREA DE GESTIÓN</p>
         </div>
 
-        <form action={login} className="space-y-6">
+        <form action={async (formData) => {
+          'use server'
+          await login(formData)
+        }} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-stone-600 mb-2">Email</label>
             <input 
