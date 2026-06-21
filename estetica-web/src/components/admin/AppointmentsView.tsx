@@ -10,6 +10,7 @@ export default function AppointmentsView({ initialAppointments, services }: { in
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [filter, setFilter] = useState('all') 
   const [search, setSearch] = useState('')
+  const [dateFilter, setDateFilter] = useState('')
   
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [formData, setFormData] = useState({
@@ -31,6 +32,7 @@ export default function AppointmentsView({ initialAppointments, services }: { in
 
   const filtered = appointments.filter(a => {
     if (filter !== 'all' && a.status !== filter) return false
+    if (dateFilter && a.date !== dateFilter) return false
     if (search && !a.client_name.toLowerCase().includes(search.toLowerCase()) && !a.client_email.toLowerCase().includes(search.toLowerCase())) return false
     return true
   })
@@ -83,6 +85,22 @@ export default function AppointmentsView({ initialAppointments, services }: { in
             onChange={(e) => setSearch(e.target.value)}
             className="flex-1 px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#c6a87c]/50"
           />
+          <div className="flex items-center gap-2">
+            <input 
+              type="date" 
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#c6a87c]/50 bg-white"
+            />
+            {dateFilter && (
+              <button 
+                onClick={() => setDateFilter('')}
+                className="px-3 py-3 text-sm text-stone-500 hover:text-stone-800 transition-colors bg-stone-100 hover:bg-stone-200 rounded-xl"
+              >
+                Limpiar
+              </button>
+            )}
+          </div>
           <select 
             value={filter} 
             onChange={(e) => setFilter(e.target.value)}
