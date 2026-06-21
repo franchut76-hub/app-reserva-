@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { updateAppointmentStatus, createManualAppointment } from '@/actions/admin-appointments'
+import { updateAppointmentStatus, createManualAppointment, sendReminderEmail } from '@/actions/admin-appointments'
 
 export default function AppointmentsView({ initialAppointments, services }: { initialAppointments: any[], services: any[] }) {
   const [appointments, setAppointments] = useState(initialAppointments)
@@ -27,6 +27,17 @@ export default function AppointmentsView({ initialAppointments, services }: { in
       setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: newStatus } : a))
     } else {
       alert('Error: ' + res.error)
+    }
+  }
+
+  const handleSendReminder = async (id: string) => {
+    if (window.confirm('¿Seguro que quieres enviar un correo de recordatorio a este cliente?')) {
+      const res = await sendReminderEmail(id)
+      if (res.success) {
+        alert('Recordatorio enviado con éxito.')
+      } else {
+        alert('Error al enviar recordatorio: ' + res.error)
+      }
     }
   }
 
@@ -145,18 +156,26 @@ export default function AppointmentsView({ initialAppointments, services }: { in
                     {getStatusBadge(appt.status)}
                   </td>
                   <td className="py-4 text-right">
-                    <select 
-                      disabled={loadingId === appt.id}
-                      onChange={(e) => handleStatusChange(appt.id, e.target.value)}
-                      value={appt.status}
-                      className="px-3 py-2 text-sm rounded-lg border border-stone-200 focus:outline-none disabled:opacity-50"
-                    >
-                      <option value="pending">Marcar Pendiente</option>
-                      <option value="confirmed">Marcar Confirmada</option>
-                      <option value="completed">Marcar Completada</option>
-                      <option value="cancelled">Cancelar</option>
-                      <option value="no_show">Marcar No-Show</option>
-                    </select>
+                    <div className="flex flex-col gap-2 items-end justify-center h-full">
+                      <select 
+                        disabled={loadingId === appt.id}
+                        onChange={(e) => handleStatusChange(appt.id, e.target.value)}
+                        value={appt.status}
+                        className="px-3 py-2 text-sm rounded-lg border border-stone-200 focus:outline-none disabled:opacity-50"
+                      >
+                        <option value="pending">Marcar Pendiente</option>
+                        <option value="confirmed">Marcar Confirmada</option>
+                        <option value="completed">Marcar Completada</option>
+                        <option value="cancelled">Cancelar</option>
+                        <option value="no_show">Marcar No-Show</option>
+                      </select>
+                      <button
+                        onClick={() => handleSendReminder(appt.id)}
+                        className="text-xs px-3 py-1 bg-stone-100 text-stone-700 hover:bg-stone-200 rounded-md transition-colors"
+                      >
+                        Enviar Recordatorio
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

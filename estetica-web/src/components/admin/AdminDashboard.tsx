@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { cancelAppointment, logout } from '@/actions/admin'
+import { sendReminderEmail } from '@/actions/admin-appointments'
 
 export default function AdminDashboard({ initialAppointments }: { initialAppointments: any[] }) {
   const [appointments, setAppointments] = useState(initialAppointments)
@@ -20,6 +21,17 @@ export default function AdminDashboard({ initialAppointments }: { initialAppoint
       setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: 'cancelled' } : a))
     } else {
       alert('Error cancelando la cita: ' + res.error)
+    }
+  }
+
+  const handleSendReminder = async (id: string) => {
+    if (window.confirm('¿Seguro que quieres enviar un correo de recordatorio a este cliente?')) {
+      const res = await sendReminderEmail(id)
+      if (res.success) {
+        alert('Recordatorio enviado con éxito.')
+      } else {
+        alert('Error al enviar recordatorio: ' + res.error)
+      }
     }
   }
 
@@ -70,13 +82,21 @@ export default function AdminDashboard({ initialAppointments }: { initialAppoint
                     </div>
                   </div>
                   
-                  <button 
-                    onClick={() => handleCancel(appt.id)}
-                    disabled={loadingId === appt.id}
-                    className="px-6 py-3 border border-red-200 text-red-500 hover:bg-red-50 rounded-xl transition-colors text-sm font-medium uppercase tracking-wider disabled:opacity-50"
-                  >
-                    {loadingId === appt.id ? '...' : 'Cancelar'}
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => handleSendReminder(appt.id)}
+                      className="px-6 py-3 border border-stone-200 text-stone-600 hover:bg-stone-50 rounded-xl transition-colors text-sm font-medium uppercase tracking-wider"
+                    >
+                      Recordatorio
+                    </button>
+                    <button 
+                      onClick={() => handleCancel(appt.id)}
+                      disabled={loadingId === appt.id}
+                      className="px-6 py-3 border border-red-200 text-red-500 hover:bg-red-50 rounded-xl transition-colors text-sm font-medium uppercase tracking-wider disabled:opacity-50"
+                    >
+                      {loadingId === appt.id ? '...' : 'Cancelar'}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
